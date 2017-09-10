@@ -1,0 +1,331 @@
+---
+title: "Homework 3"
+author: "Shiyu Wang"
+date: "February 23, 2017"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE }
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Setting up
+
+```{r}
+# Read data
+data= read.table("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/SAheart.data",
+                 sep=",",head=T,row.names=1)
+```
+
+## Question 1
+### Part A
+```{r}
+set.seed(1)
+sub <- sample(nrow(data), floor(nrow(data)/2))
+train<-data[sub,]
+valid<-data[-sub,]
+head(train)
+```
+
+### Part B
+```{r}
+# numeric categorical column
+train$famhist = as.numeric(train$famhist)
+valid$famhist = as.numeric(valid$famhist)
+## One-variable summary
+summary(train)
+
+# Two-variable summary
+pairs(train)
+# Correlation coefficients ###
+round(cor(train),3)
+```
+```{R}
+# Missing values ###
+any(is.na(train))
+```
+```{R}
+# Outliers
+boxplot(train)
+```
+
+## Question 2
+```{r}
+library(leaps)
+#performs all subset selection (best subset selection)
+regfit.full <- regsubsets(chd~., data = train)
+reg.summary <- summary(regfit.full)
+reg.summary
+
+#Perform variable selection using all subsets selection BIC criteria.
+plot(reg.summary$bic, xlab = "Number of variables", ylab = "BIC", type = "l")
+
+#Getting number of parameters
+which.min(reg.summary$bic)
+
+# Based on the random train data set, the 
+```
+
+```{r}
+# Apply logistic regression
+sa.heart.fit = glm(chd ~ age + ldl + famhist, family = binomial, data=train)
+summary(sa.heart.fit)
+coef(sa.heart.fit)
+# The logistic model is: 
+# log(chd/(1-chd)) = -5.38137237 + 0.05354403 x age + 0.25546871 x ldl + 0.79596898 x famhist + error
+```
+
+## Question 3
+```{r}
+library(MASS)
+lda.fit = lda(chd ~ ., data=train)
+lda.fit
+plot(lda.fit)
+```
+
+## Question 4
+### Part A
+```{r}
+library(glmnet)
+x <- model.matrix(chd~.,train)[,-1]
+y <- train$chd
+grid = 10^seq(10,-2, length = 100)
+lasso.mod <- glmnet(x,y, alpha = 1, lambda = grid)
+plot(lasso.mod, main = "Lasso regression", label = TRUE, xvar = "lambda", xlim = c(-5,5))
+```
+
+### Part B
+```{r}
+cv.out <- cv.glmnet(x,y,alpha = 1)
+plot(cv.out)
+```
+### Part C
+```{r}
+# find lambda
+bestlam.lasso <- cv.out$lambda.min
+bestlam.lasso
+#best log(lambda)
+log(bestlam.lasso)
+lasso.mode <- glmnet(x, y, alpha=1, lambda = bestlam.lasso)
+predict(lasso.mode, s = bestlam.lasso, type = "coefficients")[1:10,]
+```
+
+### Part D
+```{r}
+lasso.fit = glm(chd ~ tobacco + ldl + famhist + typea + obesity + age, family = binomial, data=train)
+summary(lasso.fit)
+coef(lasso.fit)
+```
+
+
+## Question 5
+
+### Part A
+```{r}
+library(pamr)
+# Reformat the dataset for parm
+pamrTrain <- list(x=t(as.matrix(train[,-10])), y=train[,10])
+pamrValid <- list(x=t(as.matrix(valid[,-10])), y=valid[,10])
+
+# Fit the classifier on the entire training set
+fit.pamr <- pamr.train(pamrTrain)
+fit.pamr
+
+# Use cross-validation to select the best regularization parameter
+fit.cv.pamr <- pamr.cv(fit.pamr, pamrTrain)
+fit.cv.pamr
+# Manually select the threshold depending on the plots and on the confusion matrix
+pamr.plotcv(fit.cv.pamr)
+```
+
+### Part B
+
+```{r}
+#Let's compare thresholds=1 and 2 to illustrate the effect of shrinkage
+pamr.confusion(fit.cv.pamr, threshold=0.137)
+pamr.confusion(fit.cv.pamr, threshold=0.273)
+
+#Get the best threshhold
+thresh <- max(fit.cv.pamr$threshold[fit.cv.pamr$error==min(fit.cv.pamr$error)])
+thresh
+# Refit the classifier on the full dataset, but using the threshold
+fit.pamr <- pamr.train(pamrTrain, threshold=0.1367487)
+```
+
+### Part C
+
+```{r}
+set.seed(120)
+mydata <- list(x=x,y=y)
+mytrain <- pamr.train(mydata)
+pamr.plotcvprob(mytrain,mydata, threshold=0.1367487)
+```
+
+## Question 6
+
+### Part A
+
+```{r}
+library(ROCR)
+# Logistic
+scores <- predict(sa.heart.fit, newdata=train, type="response")
+
+# compare predicted probabilities to labels, for varying probability cutoffs
+pred <- prediction(scores, labels=train$chd )
+perf <- performance(pred, "tpr", "fpr")
+
+# plot the ROC curve
+plot(perf, colorize=T, main="In-sample ROC curve")
+
+# print out the area under the curve
+unlist(attributes(performance(pred, "auc"))$y.values)
+
+```
+
+```{r}
+#LDA
+scores <- predict(lda.fit, newdata= train)$posterior[,2]
+pred <- prediction( scores, labels= train$chd )
+perf <- performance(pred, "tpr", "fpr")
+plot(perf, colorize=T, main="LDA")
+# print out the area under the curve
+unlist(attributes(performance(pred, "auc"))$y.values)
+```
+
+```{r}
+#Lasso
+summary(lasso.fit)
+# calculate predicted probabilities on the same training set
+scores <- predict(lasso.fit, newdata=train, type="response")
+
+# compare predicted probabilities to labels, for varying probability cutoffs
+pred <- prediction(scores, labels=train$chd )
+perf <- performance(pred, "tpr", "fpr")
+
+# plot the ROC curve
+plot(perf, colorize=T, main="In-sample ROC curve")
+
+# print out the area under the curve
+unlist(attributes(performance(pred, "auc"))$y.values)
+
+```
+
+```{r}
+# Nearest shrunken centroids
+pred.pamr.train <- pamr.predict(fit.pamr, newx=pamrTrain$x, threshold=0.1367487, type="posterior")[,2]
+pred <- prediction(predictions=pred.pamr.train, labels= pamrTrain$y)
+perf <- performance(pred, "tpr", "fpr")
+plot(perf, colorize=T, main="Nearest shrunken centroids")
+# print out the area under the curve
+unlist(attributes(performance(pred, "auc"))$y.values)
+```
+
+### Part B
+```{r}
+#logistic
+# make prediction on the validation dataset
+scores <- predict(sa.heart.fit, newdata=valid, type="response")
+pred <- prediction(scores, labels=valid$chd )
+perf <- performance(pred, "tpr", "fpr")
+
+# overlay the line for the ROC curve
+plot(perf, colorize=T)
+
+# print out the area under the curve
+unlist(attributes(performance(pred, "auc"))$y.values)
+
+```
+
+```{r}
+# LDA
+scores <- predict(lda.fit, newdata= valid)$posterior[,2]
+pred <- prediction( scores, labels= valid$chd )
+perf <- performance(pred, "tpr", "fpr")
+plot(perf, colorize=T, main="LDA")
+# print out the area under the curve
+unlist(attributes(performance(pred, "auc"))$y.values)
+```
+
+```{r}
+#Lasso
+summary(lasso.fit)
+# calculate predicted probabilities on the same training set
+scores <- predict(lasso.fit, newdata=valid, type="response")
+
+# compare predicted probabilities to labels, for varying probability cutoffs
+pred <- prediction(scores, labels=valid$chd )
+perf <- performance(pred, "tpr", "fpr")
+
+# plot the ROC curve
+plot(perf, colorize=T, main="In-sample ROC curve")
+
+# print out the area under the curve
+unlist(attributes(performance(pred, "auc"))$y.values)
+```
+
+```{r}
+# Nearest shrunken centroids
+pred.pamr.train <- pamr.predict(fit.pamr, newx=pamrValid$x, threshold=0.1367487, type="posterior")[,2]
+pred <- prediction(predictions=pred.pamr.train, labels= pamrValid$y)
+perf <- performance(pred, "tpr", "fpr")
+plot(perf, colorize=T, main="Nearest shrunken centroids")
+# print out the area under the curve
+unlist(attributes(performance(pred, "auc"))$y.values)
+```
+
+### Part C
+
+After evaluating the ROC curve of each classifier, we can find the result between training and validation set are slightly different. 
+
+#### How do the results different between the training and the validation set?
+
+On training set, the the area under the ROC curve:
+
+- Logistic regression: 0.7757557
+- LDA: 0.8002057
+- Logistic with lasso: 0.8004431
+- Nearest shrunken centroids: 0.724007
+
+On valid set, the the area under the ROC curve:
+
+- Logistic regression: 0.7571743
+- LDA: 0.7706866
+- Logistic with lasso: 0.7751761
+- Nearest shrunken centroids: 0.7525528
+
+#### Which approach(es) perform(s) better on the validation set?
+
+In my experiment, LDA and Logistic with lasso performs a little bit better, but not too much. The best one (Logistic with lasso) and the worst one (Nearest shrunken centroids) only has 0.02 different in AUC.
+
+#### What is are the reasons for this difference in performance?
+They perform similar because this problem is a simple 2 class classification. I believe one of the reasons to cause them slightly different is the random training and validation dataset, they also perform differently on this problem. 
+
+- Logistic regression is not the best because we didn't check the correlationship between predictors. And from the pair(train), we can see there are correlation between parameters.
+
+- One drawback of diagonal LDA is that it depends on all of the features. This is the reason it can't perform better in this problem.
+
+- Logistic with Lasso is the best because it shrunk the dataset to filter out the less related predictors with zero coef. If we test different number of predictors, the result possibly become even better.
+
+- Nearest shrunken centroids only depends on a subset of the features, for reasons of accuracy and interpret ability. With an accurate threshold with less err rate, it performs well in this problem.
+
+#### Which models are more interpretable?
+Firstly, LDA is not interpretable because it doesn't apply subset selection. And Logistic with lasso and Nearest shrunk centroids are also both interpretable with small subset. And logistic with best subset selection can be the most interpretable if the selected subset is small. In this case, it is with 3 predictors. 
+
+## Question 7
+
+- a. GaussI <= LinLog 
+LinLog is the logistic model maximizing the likelihoods
+
+- b. GaussX <= QuadLog 
+Both of them have quadratic features, but QuadLog is the model of this class maximizing likelihoods 
+
+- c. LinLog <= QuadLog 
+LinLog with linear features is a subclass of QuadLog with quadratic functions
+
+- d. GaussI <= QuadLog 
+GaussI have higher average log joint probabilities of examples and labels, but it does not necessarily translate to higher likelihoods. So QuadLog with quadratic functions maximizing the log likelihood may perform better.
+
+- e. It is commonly the case that GaussX <= GaussI and that QuadLog <= LinLog

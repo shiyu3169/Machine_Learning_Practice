@@ -1,0 +1,236 @@
+---
+title: "HW4"
+author: "Shiyu Wang"
+date: "April 15, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Problem 1
+
+##### (a)
+
+```
+For x<=ξ, f1(x) has coefficients a1=β0,b1=β1,c1=β2,d1=β3a1=β0,b1=β1,c1=β2,d1=β3.
+
+```
+
+##### (b)
+```
+
+For x>ξ, f(x) has the form of:
+β0+β1x+β2x^2+β3^3+β4(x−ξ)^3
+=β0+β1x+β2x^2+β3x^3+β4(x^3−3x^2ξ+3xξ^2−ξ^3)
+=(β0−β4ξ^3)+(β1+3β4ξ^2)x+(β2−3β4ξ)x^2+(β3+β4)x^3
+
+So 
+a2=β0−β4ξ^3 
+b2=β1+3β4ξ^2 
+c2=β2−3β4ξ
+d2=β3+β4
+```
+
+##### (c)
+
+```
+f1(ξ)=β0+β1ξ+β2ξ^2+β3ξ3
+f2(ξ)=(β0−β4ξ^3)+(β1+3β4ξ^2)ξ+(β2−3β4ξ)ξ^2+(β3+β4)ξ^3
+=β0−β4ξ3+β1ξ+3β4ξ3+β2ξ2−3β4ξ3+β3ξ3+β4ξ3
+=β0+β1ξ+β2ξ^2+3β4ξ^3−3β4ξ^3+β3ξ^3+β4ξ^3−β4ξ^3
+=β0+β1ξ+β2ξ^2+β3
+```
+
+##### (d)
+
+```
+f′(x)=b1+2c1x+3d1x^2
+f′1(ξ)=β1+2β2ξ+3β3ξ^2
+f′2(ξ)=β1+3β4ξ^2+2(β2−3β4ξ)ξ+3(β3+β4)ξ^2
+=β1+3β4ξ^2+2β2ξ−6β4ξ^2+3β3ξ^2+3β4ξ^2
+=β1+2β2ξ+3β3ξ^2+3β4ξ^2+3β4ξ^2−6β4ξ^2
+=β1+2β2ξ+3β3ξ^2
+```
+
+##### (e)
+```
+f′′(x)=2c1+6d1x
+f′′1(ξ)=2β2+6β3ξ
+f′′2(ξ)=2(β2−3β4ξ)+6(β3+β4)ξ
+=2β2+6β3ξ
+
+```
+
+#### Problem 5
+
+##### (a)
+```{r}
+x1 = c(3, 2, 4, 1, 2, 4, 4)
+x2 = c(4, 2, 4, 4, 1, 3, 1)
+colors = c("red", "red", "red", "red", "blue", "blue", "blue")
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+```
+
+f1(ξ)=β0+β1ξ+β2ξ2+β3ξ3f2(ξ)=(β0−β4ξ3)+(β1+3β4ξ2)ξ+(β2−3β4ξ)ξ2+(β3+β4)ξ3=β0−β4ξ3+β1ξ+3β4ξ3+β2ξ2−3β4ξ3+β3ξ3+β4ξ3=β0+β1ξ+β2ξ2+3β4ξ3−3β4ξ3+β3ξ3+β4ξ3−β4ξ3=β0+β1ξ+β2ξ2+β3ξ3
+f1(ξ)=β0+β1ξ+β2ξ2+β3ξ3f2(ξ)=(β0−β4ξ3)+(β1+3β4ξ2)ξ+(β2−3β4ξ)ξ2+(β3+β4)ξ3=β0−β4ξ3+β1ξ+3β4ξ3+β2ξ2−3β4ξ3+β3ξ3+β4ξ3=β0+β1ξ+β2ξ2+3β4ξ3−3β4ξ3+β3ξ3+β4ξ3−β4ξ3=β0+β1ξ+β2ξ2+β3ξ3
+d
+##### (b)
+
+(2,2), (4,4) \ (2,1), (4,3) \ => (2,1.5), (4,3.5) \ b = (3.5 - 1.5) / (4 - 2) = 1 \ a = X2 - X1 = 1.5 - 2 = -0.5
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+abline(-0.5, 1)
+```
+
+##### (c)
+
+0.5 - X1 + X2 > 0
+
+##### (d)
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+abline(-0.5, 1)
+abline(-1, 1, lty = 2)
+abline(0, 1, lty = 2)
+```
+
+##### (e)
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+abline(-0.5, 1)
+arrows(2, 1, 2, 1.5)
+arrows(2, 2, 2, 1.5)
+arrows(4, 4, 4, 3.5)
+arrows(4, 3, 4, 3.5)
+```
+
+##### (f)
+A slight movement of observation #7 (4,1) blue would not have an effect on the maximal margin hyperplane because it is out of margin and far from it.
+
+##### (g)
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+abline(-0.8, 1)
+```
+-0.8 - X1 + X2 > 0
+
+##### (h)
+```{r}
+plot(x1, x2, col = colors, xlim = c(0, 5), ylim = c(0, 5))
+points(c(4), c(2), col = c("red"))
+```
+
+#### Problem 6
+
+##### (a)
+
+```{r}
+data= read.table("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/SAheart.data", sep=",",head=T,row.names=1)
+data$chd <- factor(data$chd)
+set.seed(1)
+sub <- sample(nrow(data), floor(nrow(data)/2))
+train<-data[sub,]
+valid<-data[-sub,]
+head(train)
+library(caret)
+library(ggplot2)
+library(e1071)
+library(MASS)
+control <- trainControl(method="cv", number=12)
+metric <- "Accuracy"
+```
+
+```{r}
+# Linear Kernel
+# Train
+model.svm <- train(chd~., data=train, method="svmLinear", metric=metric, trControl=control)
+prediction.svm <- predict(model.svm, train)
+confusionMatrix(prediction.svm, train$chd)$overall[1]
+# Valid
+model.svm <- train(chd~., data=train, method="svmLinear", metric=metric, trControl=control)
+prediction.svm <- predict(model.svm, valid)
+confusionMatrix(prediction.svm, valid$chd)$overall[1]
+
+# Radial Kernel
+# Train
+model.svm <- train(chd~., data=train, method="svmRadial", metric=metric, trControl=control)
+prediction.svm <- predict(model.svm, train)
+confusionMatrix(prediction.svm, train$chd)$overall[1]
+# Valid
+model.svm <- train(chd~., data=train, method="svmRadial", metric=metric, trControl=control)
+prediction.svm <- predict(model.svm, valid)
+confusionMatrix(prediction.svm, valid$chd)$overall[1]
+```
+
+```{r}
+# ROC
+#Tainning
+library(ROCR)
+rocplot=function(pred, truth, ...){
+  predob = prediction(pred, truth)
+  pref = performance(predob, "tpr", "fpr")
+  plot(pref,...)
+}
+
+svmfit.opt=svm(chd~., data=train, kernel="radial", gamma=0.01, cost=1, decision.values=T)
+fitted=attributes(predict(svmfit.opt, train, decision.values=TRUE))$decision.values
+par(mfrow=c(1, 2))
+
+rocplot(fitted, valid$chd, main="Test Data")
+pred = prediction(fitted, valid$chd)
+unlist(attributes(performance(pred, "auc"))$y.values)
+```
+
+```{r}
+data= read.table("http://www-stat.stanford.edu/~tibs/ElemStatLearn/datasets/SAheart.data", sep=",",head=T,row.names=1)
+data$famhist = as.numeric(data$famhist)
+maxs <- apply(data, 2, max)
+mins <- apply(data, 2, min)
+
+scaled.data <- as.data.frame(scale(data, center = mins, scale = maxs - mins))
+set.seed(1)
+sub <- sample(nrow(scaled.data), floor(nrow(scaled.data)/2))
+train<-scaled.data[sub,]
+valid<-scaled.data[-sub,]
+head(train)
+```
+
+```{r}
+feats <- names(scaled.data[,c(1:9)])
+
+# Concatenate strings
+f <- paste(feats,collapse=' + ')
+f <- paste('chd ~',f)
+
+# Convert to formula
+f <- as.formula(f)
+
+f
+```
+
+```{r}
+library(neuralnet)
+nn <- neuralnet(f,data=train,hidden=c(40,40,40,40),linear.output=FALSE)
+# Compute Predictions off Test Set
+predicted.nn.values <- compute(nn,valid[,c(1:9)])
+
+# Check out net.result
+print(head(predicted.nn.values$net.result))
+```
+
+
+
+```{r}
+plot(nn)
+predicted.nn.values$net.result <- sapply(predicted.nn.values$net.result,round,digits=0)
+table(valid$chd,predicted.nn.values$net.result)
+# Accuracy = (125+38)/231 = 70.56%
+```
+
+
+
+

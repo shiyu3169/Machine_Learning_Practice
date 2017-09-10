@@ -1,0 +1,157 @@
+---
+title: "hw4"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/Users/xinyandeng/Desktop/ML/HW4')
+```
+
+## Q4
+
+```{r}
+# read the data
+setwd('/Users/xinyandeng/Desktop/ML/HW4')
+SAheart <- read.table('SAheart.data.txt', header = TRUE, row.names = 1, sep = ',')
+# set the seed to produce the same result each time running the code
+set.seed(1)
+
+# Convert chd from num to categorical
+library(ISLR)
+attach(SAheart)
+Present = ifelse(chd==1, "Yes", "No")
+# merge Presenr with SAheart data
+SAheart = data.frame(SAheart, Present)
+# randomly select 231 rows for training set and validation set
+train_row <- sample(1:462,231)
+validation_row <- c(1:462)[-train_row]
+# convert the categorical variable to numeric
+SAheart$famhist <- as.character(SAheart$famhist)
+SAheart$famhist[which(SAheart$famhist=="Present")] <- "1"
+SAheart$famhist[which(SAheart$famhist=="Absent")] <- "0"
+SAheart$famhist <- as.numeric(SAheart$famhist)
+# create training and validation sets
+SAheart_train <- SAheart[train_row,]
+SAheart_train <- SAheart_train[,-10]
+SAheart_validation <- SAheart[validation_row,]
+SAheart_validation <- SAheart_validation[,-10]
+```
+
+## b)
+Include all predictors when building tree model, the training error rate is 0.13, and 24 terminal nodes.
+```{r}
+# fit a tree to the training data
+library(tree)
+treeModel = tree(Present~., SAheart_train)
+summary(treeModel)
+```
+
+## c)
+```{r}
+treeModel
+```
+For example let's look at 822, it means if adiposity is the predictor, and when its value is greater than 31.18, there're 7 data points belongs to this region. The prediction at this node is chd=1, 14.286% of data points have cha value to be 0, and the rest of them are 1. Also, "*"" indicates it's a terminal node.
+
+## d)
+```{r}
+plot(treeModel)
+text(treeModel, pretty = 0)
+```
+
+## e)
+```{r}
+treePred = predict(treeModel, SAheart_validation, type="class")
+table(SAheart_validation$Present, treePred)
+```
+Error rate is (42+41)/231 = 35.93%
+
+## f)
+```{r}
+treeCV = cv.tree(treeModel, FUN=prune.misclass)
+names(treeCV)
+treeCV
+```
+The tree with 6 terminal nodes results in the lowest
+cross-validation error rate, with 78 cross-validation errors.
+
+## g)
+```{r}
+plot(treeCV$size ,treeCV$dev ,type="b", xlab="Tree Size", ylab="CV classification Error Rate")
+```
+
+## h)
+When size = 6, result for cross-validation error rate is lowest.
+
+## i)
+```{r}
+treePrune =prune.misclass(treeModel ,best = 6)
+```
+
+
+## j)
+```{r}
+summary(treePrune)
+```
+Misclassification error rate is 23.38%, which is higher than before.
+
+## k)
+```{r}
+treePrunePred = predict(treePrune, SAheart_validation, type="class")
+table(SAheart_validation$Present, treePrunePred)
+```
+Test error rate is now (27+37)231 = 27.71%, which is lower than before.
+
+## 4b) Perform bagging on training set
+```{r}
+library(randomForest)
+library(caret)
+
+# i && ii
+train.errors = rep(0, 100)
+test.errors = rep(0, 100)
+for (i in 1:100) {
+ tree.bag = randomForest(Present~., SAheart_train, mtry=9, ntree=i, importance=TRUE)
+ yhat.bag = predict(tree.bag, SAheart_train)
+ yhat.bag.test = predict(tree.bag, SAheart_validation)
+ train.errors[i] = confusionMatrix(yhat.bag, SAheart_train$Present)$overall[1]
+ test.errors[i] = confusionMatrix(yhat.bag.test, SAheart_validation$Present)$overall[1]
+}
+plot(train.errors, xlab="Number of Trees", ylab="% of correct predictions", main="Bagging on the training set")
+plot(test.errors, xlab="Number of Trees", ylab="% of correct predictions", main="Bagging on the testing set")
+```
+## 4B-iii)
+                    Training    Validation
+SinglePrunedTree    76.62%        72.29%
+Bagging             100%             70%
+
+## 4c) Perform random forest on the training set with two different m
+```{r}
+# i &ii
+train.errors1 = rep(0, 100)
+train.errors2 = rep(0, 100)
+test.errors1 = rep(0, 100)
+test.errors2 = rep(0, 100)
+for (i in 1:100) {
+  rf1 = randomForest(Present~., SAheart_train, mtry=6, ntree=i, importance = TRUE)
+  rf2 = randomForest(Present~., SAheart_train, mtry=3, ntree=i, importance = TRUE)
+ yhat.rf1 = predict(rf1, SAheart_train)
+ yhat.rf2 = predict(rf2, SAheart_train)
+ yhat.rf1.test = predict(rf1, SAheart_validation)
+ yhat.rf2.test = predict(rf2, SAheart_validation)
+ train.errors1[i] = confusionMatrix(yhat.rf1, SAheart_train$Present)$overall[1]
+ test.errors1[i] = confusionMatrix(yhat.rf1.test, SAheart_validation$Present)$overall[1]
+ train.errors2[i] = confusionMatrix(yhat.rf2, SAheart_train$Present)$overall[1]
+ test.errors2[i] = confusionMatrix(yhat.rf2.test, SAheart_validation$Present)$overall[1]
+}
+x=seq(1, 100)
+plot(x, train.errors1, xlab="Number of Trees", ylab="% of correct predictions", type="p", main="Random Forest m=6 on the training set", col="blue", add=TRUE)
+points(x, train.errors2, col="red")
+
+plot(x, test.errors1, xlab="Number of Trees", ylab="% of correct predictions", type="p", main="Random Forest m=3 on the validation set", col="blue", add=TRUE)
+points(x, test.errors2, col="red")
+```
+
+## 4d) Perform boosting on the training set with 1,000 trees
+
+
+
